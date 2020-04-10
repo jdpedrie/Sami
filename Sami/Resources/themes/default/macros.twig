@@ -61,7 +61,7 @@
 {% macro method_parameters_signature(method) -%}
     {%- from "macros.twig" import hint_link -%}
     (
-        {%- for parameter in method.parameters %}
+        {%- for parameter in method.topLevelParameters %}
             {%- if parameter.hashint %}{{ hint_link(parameter.hint) }} {% endif -%}
             {%- if parameter.variadic %}...{% endif %}${{ parameter.name|raw }}
             {%- if parameter.default is not null %} = {{ parameter.default }}{% endif %}

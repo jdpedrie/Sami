@@ -20,6 +20,7 @@ class ParameterReflection extends Reflection
     protected $modifiers;
     protected $default;
     protected $variadic;
+    protected $isChildParam = false;
 
     public function __toString()
     {
@@ -76,6 +77,16 @@ class ParameterReflection extends Reflection
         $this->method = $method;
     }
 
+    public function setIsChildParam($isChildParam)
+    {
+        $this->isChildParam = $isChildParam;
+    }
+
+    public function getIsChildParam()
+    {
+        return $this->isChildParam;
+    }
+
     public function toArray()
     {
         return array(
@@ -92,7 +103,7 @@ class ParameterReflection extends Reflection
         );
     }
 
-    public static function fromArray(Project $project, $array)
+    public static function fromArray(Project $project = null, $array)
     {
         $parameter = new self($array['name'], $array['line']);
         $parameter->shortDesc = $array['short_desc'];

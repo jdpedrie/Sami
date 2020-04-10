@@ -199,6 +199,7 @@ class NodeVisitor extends NodeVisitorAbstract
         $method->setLongDesc($comment->getLongDesc());
         $method->setSee($this->resolveSee($comment->getTag('see')));
         if (!$errors = $comment->getErrors()) {
+            $comment->setParamHierarchy();
             $errors = $this->updateMethodParametersFromTags($method, $comment->getTag('param'));
 
             if ($tag = $comment->getTag('return')) {
@@ -322,13 +323,43 @@ class NodeVisitor extends NodeVisitorAbstract
             return $errors;
         }
 
+        $parameters = $method->getParameters();
+        $newParams = [];
+
         foreach ($tags as $i => $tag) {
-            $parameter = $method->getParameter($tag[1] ? $tag[1] : $i);
+            $parameter = $parameters[$tag[1]];
             $parameter->setShortDesc($tag[2]);
             if (!$parameter->hasHint()) {
                 $parameter->setHint($this->resolveHint($tag[0]));
             }
+
+            $newParams[] = $parameter;
+
+            // has children! :surprisedpikachu:
+            if (count($tag) > 3) {
+                foreach (array_slice($tag, 3) as $child) {
+                    $param = ParameterReflection::fromArray(null, [
+                        'name' => $child[1],
+                        'line' => null,
+                        'short_desc' => $child[2],
+                        'long_desc' => '',
+                        'hint' => $child[0],
+                        'tags' => null,
+                        'modifiers' => null,
+                        'default' => null,
+                        'variadic' => false,
+                        'is_by_ref' => false
+                    ]);
+
+                    $param->setMethod($method);
+                    $param->setIsChildParam(true);
+
+                    $newParams[] = $param;
+                }
+            }
         }
+
+        $method->setParameters($newParams);
 
         return array();
     }

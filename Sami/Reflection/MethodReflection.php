@@ -98,6 +98,13 @@ class MethodReflection extends Reflection
         return $this->parameters;
     }
 
+    public function getTopLevelParameters()
+    {
+        return array_filter($this->parameters, function ($parameter) {
+            return $parameter->getIsChildParam() === false;
+        });
+    }
+
     public function getParameter($name)
     {
         if (ctype_digit((string) $name)) {

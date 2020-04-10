@@ -18,6 +18,37 @@ class DocBlockNode
     protected $tags = array();
     protected $errors = array();
 
+    public function setParamHierarchy()
+    {
+        $params = isset($this->tags['param'])
+            ? $this->tags['param']
+            : [];
+
+        $prevTopKey = null;
+        foreach ($params as $i => $val) {
+            if (strpos($val[1], '.') === false) {
+                $prevTopKey = $i;
+                continue;
+            }
+
+            if ($prevTopKey === null) {
+                throw new \Exception('child param cannot be first');
+            }
+
+            $parts = explode('.', $val[1]);
+            $prevName = $params[$prevTopKey][1];
+
+            if ($parts[0] !== $prevName) {
+                throw new \Exception('child param does not descend from previous parent.');
+            }
+
+            $params[$prevTopKey][] = $val;
+            unset($params[$i]);
+        }
+
+        $this->tags['param'] = array_values($params);
+    }
+
     public function addTag($key, $value)
     {
         $this->tags[$key][] = $value;
