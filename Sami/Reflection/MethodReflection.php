@@ -113,7 +113,15 @@ class MethodReflection extends Reflection
             return $tmp[$name] ?? null;
         }
 
-        return $this->parameters[$name] ?? null;
+        if (isset($this->parameters[$name])) {
+            return $this->parameters[$name];
+        }
+
+        foreach ($this->parameters as $parameter) {
+            if ($parameter instanceof ParameterReflection && $parameter->getName() === $name) {
+                return $parameter;
+            }
+        }
     }
 
     /*

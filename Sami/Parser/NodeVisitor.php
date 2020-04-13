@@ -327,6 +327,11 @@ class NodeVisitor extends NodeVisitorAbstract
         $newParams = [];
 
         foreach ($tags as $i => $tag) {
+            if (!isset($parameters[$tag[1]])) {
+                $errors[] = sprintf('malformed tag %s', $tag[1]);
+                continue;
+            }
+
             $parameter = $parameters[$tag[1]];
             $parameter->setShortDesc($tag[2]);
             if (!$parameter->hasHint()) {
@@ -361,7 +366,7 @@ class NodeVisitor extends NodeVisitorAbstract
 
         $method->setParameters($newParams);
 
-        return array();
+        return $errors;
     }
 
     protected function resolveHint($hints)

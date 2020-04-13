@@ -139,7 +139,7 @@ class Sami extends Container
 
         $this['traverser'] = function ($sc) {
             $visitors = array(
-                new ClassVisitor\InheritdocClassVisitor(),
+                new ClassVisitor\InheritdocClassVisitor($sc['parser_context'], $sc['php_parser'], $sc['php_traverser']),
                 new ClassVisitor\MethodClassVisitor(),
                 new ClassVisitor\PropertyClassVisitor($sc['parser_context']),
             );

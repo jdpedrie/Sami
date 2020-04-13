@@ -142,4 +142,18 @@ class ParserContext
     {
         return $this->namespace;
     }
+
+    public function getClasses()
+    {
+        return $this->classes;
+    }
+
+    public function getClassFromClasses($name)
+    {
+        foreach ($this->classes as $class) {
+            if ($class->getName() === $name) {
+                return $class;
+            }
+        }
+    }
 }

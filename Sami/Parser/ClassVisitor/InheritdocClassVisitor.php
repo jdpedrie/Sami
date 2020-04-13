@@ -11,16 +11,54 @@
 
 namespace Sami\Parser\ClassVisitor;
 
+use PhpParser\Error;
+use PhpParser\NodeTraverser;
+use PhpParser\Parser;
 use Sami\Parser\ClassVisitorInterface;
+use Sami\Parser\ParserContext;
 use Sami\Reflection\ClassReflection;
+use Sami\Reflection\LazyClassReflection;
 
 class InheritdocClassVisitor implements ClassVisitorInterface
 {
+    private $context;
+    private $parser;
+    private $traverser;
+
+    public function __construct(ParserContext $context, Parser $parser, NodeTraverser $traverser)
+    {
+        $this->context = $context;
+        $this->parser = $parser;
+        $this->traverser = $traverser;
+    }
+
     public function visit(ClassReflection $class)
     {
         $modified = false;
         foreach ($class->getMethods() as $name => $method) {
-            if (!$parentMethod = $class->getParentMethod($name)) {
+            $parentMethod = false;
+            $parent = $class->getParent();
+            if ($parent instanceof LazyClassReflection) {
+                $parent = $this->loadFullReflector($parent);
+            }
+
+            if ($parent) {
+                $parentMethod = $parent->getMethod($name);
+            }
+
+            if (!$parentMethod) {
+                foreach ($class->getInterfaces(true) as $i) {
+                    if ($i instanceof LazyClassReflection) {
+                        $i = $this->loadFullReflector($i);
+                    }
+
+                    if ($i && $parentMethod = $i->getMethod($name)) {
+                        break;
+                    }
+                }
+            }
+
+            if (!$parentMethod) {
                 continue;
             }
 
@@ -70,5 +108,25 @@ class InheritdocClassVisitor implements ClassVisitorInterface
         }
 
         return $modified;
+    }
+
+    private function loadFullReflector(LazyClassReflection $class)
+    {
+        $name = $class->getName();
+
+        try {
+            $src = (new \ReflectionClass($name))->getFileName();
+        } catch (\ReflectionException $e) {
+            return false;
+        }
+
+        try {
+            $code = file_get_contents($src);
+            $nodes = $this->traverser->traverse($this->parser->parse($code));
+        } catch (Error $e) {
+            return false;
+        }
+
+        return $this->context->getClassFromClasses($name);
     }
 }
