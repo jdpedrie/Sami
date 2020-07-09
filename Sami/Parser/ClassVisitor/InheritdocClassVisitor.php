@@ -119,6 +119,10 @@ class InheritdocClassVisitor implements ClassVisitorInterface
         } catch (\ReflectionException $e) {
             return false;
         }
+        
+        if (empty($src)) {
+            return false;
+        }
 
         try {
             $code = file_get_contents($src);
